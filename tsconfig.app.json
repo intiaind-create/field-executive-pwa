@@ -4,14 +4,16 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": [
-      "node"
-    ]
+    "types": [],
+    "paths": {
+      "@/*": ["src/app/*"],
+      "@convex/_generated/*": ["convex/_generated/*"]
+    }
   },
-  "include": [
-    "src/**/*.ts"
+  "files": [
+    "src/main.ts"
   ],
-  "exclude": [
-    "src/**/*.spec.ts"
+  "include": [
+    "src/**/*.d.ts"
   ]
 }
