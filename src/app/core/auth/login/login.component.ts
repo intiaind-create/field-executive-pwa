@@ -19,6 +19,7 @@ export class LoginComponent {
   // Form State
   email = signal('');
   password = signal('');
+  showPassword = signal(false);
   flow = signal<'signIn' | 'signUp'>('signIn');
   isSubmitting = signal(false);
   errorMessage = signal('');
@@ -72,4 +73,3 @@ async handleLogin() {
     }
   }
 }
-  
