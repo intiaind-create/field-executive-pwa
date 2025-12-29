@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "name": "field-executive",
+  "buildCommand": "npm run build:prod",
+  "outputDirectory": "dist/field-executive/browser",
+  "installCommand": "npm install",
+  "framework": "angular",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    {
+      "src": "/manifest.webmanifest",
+      "headers": {
+        "Content-Type": "application/manifest+json",
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      },
+      "dest": "/manifest.webmanifest"
+    },
+    {
+      "src": "/ngsw-worker.js",
+      "headers": {
+        "Service-Worker-Allowed": "/",
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      },
+      "dest": "/ngsw-worker.js"
+    },
+    {
+      "src": "/assets/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*).js",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/$1.js"
+    },
+    {
+      "src": "/(.*).css",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "dest": "/$1.css"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}
