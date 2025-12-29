@@ -102,7 +102,7 @@ hasCourses = computed(() => this.courses().filter(c => c !== null).length > 0);
         )
       ]);
 
-this.courses.set(coursesData.filter(c => c !== null));
+this.courses.set(coursesData.filter((c:any) => c !== null));
       this.statistics.set(statsData);
     } catch (err: any) {
       console.error('❌ Failed to load progress:', err);
