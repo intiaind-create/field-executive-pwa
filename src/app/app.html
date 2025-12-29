@@ -1,0 +1,18 @@
+<!-- Offline Banner -->
+<div *ngIf="!isOnline()" 
+     class="bg-red-600 text-white text-xs text-center py-2 fixed top-0 w-full z-[100]">
+  ⚠️ You are offline. Data will sync when connection returns.
+  <span *ngIf="pendingActions() > 0" class="font-bold ml-2">
+    ({{ pendingActions() }} pending)
+  </span>
+</div>
+
+<!-- Main Content -->
+<div class="min-h-screen bg-gray-50"
+     [class.pt-8]="!isOnline()"
+     [class.pb-24]="showBottomNav()">
+  <router-outlet></router-outlet>
+</div>
+
+<!-- Bottom Nav - Conditional -->
+<app-bottom-nav *ngIf="showBottomNav()"></app-bottom-nav>

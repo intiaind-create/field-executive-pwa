@@ -1,0 +1,179 @@
+<div class="quiz-take-container">
+  <p-toast></p-toast>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-state">
+    <p-card header="Loading Quiz...">
+      <p-skeleton width="100%" height="400px"></p-skeleton>
+    </p-card>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !isLoading()" class="error-state">
+    <p-card header="Failed to Load Quiz">
+      <div class="error-content">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ error() }}</p>
+        <p-button 
+          label="Retry" 
+          icon="pi pi-refresh" 
+          (onClick)="retry()"
+          severity="secondary">
+        </p-button>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Quiz Content -->
+  <div *ngIf="!isLoading() && !error()" class="quiz-content">
+    <!-- Progress Header -->
+    <div class="progress-header">
+      <div class="progress-info">
+        <div class="question-meta">
+          <span class="question-counter">
+            Question {{currentQuestionIndex() + 1}} of {{totalQuestions()}}
+          </span>
+          <span class="answered-counter">
+            Answered: {{getAnsweredCount()}} / {{totalQuestions()}}
+          </span>
+        </div>
+        <p-progressBar 
+          [value]="currentProgress()" 
+          [showValue]="false"
+          [style]="{'height': '8px', 'margin-top': '0.5rem'}">
+        </p-progressBar>
+      </div>
+      <span class="timer">
+        <i class="pi pi-clock"></i>
+        {{getElapsedTime()}}
+      </span>
+    </div>
+
+    <!-- Current Question -->
+    <p-card *ngIf="currentQuestion() as question" class="question-card">
+      <ng-template pTemplate="header">
+        <div class="question-header">
+          <span class="question-number">Question {{currentQuestionIndex() + 1}}</span>
+          <span class="question-points">{{question.points}} point(s)</span>
+          <span *ngIf="question.difficulty" class="difficulty-badge" 
+                [class.easy]="question.difficulty === 'easy'"
+                [class.medium]="question.difficulty === 'medium'"
+                [class.hard]="question.difficulty === 'hard'">
+            {{question.difficulty}}
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-container [ngSwitch]="question.questionType">
+        <!-- Multiple Choice -->
+        <div *ngSwitchCase="'multiplechoice'" class="question-multiple">
+          <h3 class="question-text">{{question.questionText}}</h3>
+          
+          <div class="options-list">
+            <div 
+              *ngFor="let option of question.options; let i = index"
+              class="option-item"
+              [class.selected]="currentAnswer() === option">
+              <p-radioButton 
+                name="answer-{{currentQuestionIndex()}}" 
+                [value]="option"
+                [ngModel]="currentAnswer()"
+                (ngModelChange)="selectAnswer($event)"
+                [inputId]="'opt-' + currentQuestionIndex() + '-' + i">
+              </p-radioButton>
+              <label 
+                [for]="'opt-' + currentQuestionIndex() + '-' + i" 
+                class="option-label">
+              <span class="option-letter">{{getOptionLetter(i)}}</span>
+                <span class="option-text">{{option}}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- True/False -->
+        <div *ngSwitchCase="'truefalse'" class="question-boolean">
+          <h3 class="question-text">{{question.questionText}}</h3>
+          
+          <div class="options-list">
+            <div class="option-item" [class.selected]="currentAnswer() === 'true'">
+              <p-radioButton 
+                name="answer-{{currentQuestionIndex()}}"
+                value="true"
+                [ngModel]="currentAnswer()"
+                (ngModelChange)="selectAnswer($event)"
+                [inputId]="'true-' + currentQuestionIndex()">
+              </p-radioButton>
+              <label [for]="'true-' + currentQuestionIndex()" class="option-label">
+                <i class="pi pi-check-circle" style="color: green;"></i>
+                <span class="option-text">True</span>
+              </label>
+            </div>
+
+            <div class="option-item" [class.selected]="currentAnswer() === 'false'">
+              <p-radioButton 
+                name="answer-{{currentQuestionIndex()}}"
+                value="false"
+                [ngModel]="currentAnswer()"
+                (ngModelChange)="selectAnswer($event)"
+                [inputId]="'false-' + currentQuestionIndex()">
+              </p-radioButton>
+              <label [for]="'false-' + currentQuestionIndex()" class="option-label">
+                <i class="pi pi-times-circle" style="color: red;"></i>
+                <span class="option-text">False</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Short Answer (Future) -->
+        <div *ngSwitchDefault class="question-textarea">
+          <h3 class="question-text">{{question.questionText}}</h3>
+          <p class="coming-soon">
+            <i class="pi pi-info-circle"></i>
+            Short answer questions coming soon...
+          </p>
+        </div>
+      </ng-container>
+    </p-card>
+
+    <!-- Navigation -->
+    <div class="navigation">
+      <p-button 
+        *ngIf="!isFirstQuestion()" 
+        label="Previous" 
+        icon="pi pi-angle-left"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="prevQuestion()"
+        [disabled]="isSubmitting()">
+      </p-button>
+      
+      <div class="spacer"></div>
+      
+      <p-button 
+        [label]="isLastQuestion() ? 'Submit Quiz' : 'Next'"
+        [icon]="isLastQuestion() ? 'pi pi-check' : 'pi pi-angle-right'"
+        iconPos="right"
+        [severity]="isLastQuestion() ? 'success' : 'primary'"
+        (onClick)="nextQuestion()"
+        [loading]="isSubmitting()"
+        [disabled]="isSubmitting()">
+      </p-button>
+    </div>
+
+    <!-- Question Navigation Dots -->
+    <div class="question-nav-dots">
+      <button 
+        *ngFor="let q of questions(); let idx = index"
+        class="nav-dot"
+        [class.current]="idx === currentQuestionIndex()"
+        [class.answered]="answers().has(idx)"
+        (click)="currentQuestionIndex.set(idx)"
+        [disabled]="isSubmitting()"
+        [title]="'Question ' + (idx + 1)">
+        {{idx + 1}}
+      </button>
+    </div>
+  </div>
+</div>

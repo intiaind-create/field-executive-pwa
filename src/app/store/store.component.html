@@ -1,0 +1,173 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 pb-32">
+  
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">🛒 Store</h1>
+      <p class="text-gray-600 mt-1">Order supplies for your work</p>
+    </div>
+    <button (click)="viewOrders()" 
+            class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all">
+      My Orders
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="relative mb-4">
+    <input type="text" 
+           [value]="searchQuery()" 
+           (input)="onSearchInput($event)"
+           placeholder="Search products..." 
+           class="w-full px-4 py-3 pl-12 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"/>
+    <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <svg *ngIf="searchQuery()" 
+         (click)="clearSearch()" 
+         class="absolute right-4 top-3.5 w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" 
+         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </div>
+
+  <!-- Categories -->
+  <div class="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
+    <button (click)="selectCategory(null)"
+            class="px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all"
+            [class.bg-blue-600]="selectedCategory() === null"
+            [class.text-white]="selectedCategory() === null"
+            [class.bg-white]="selectedCategory() !== null"
+            [class.text-gray-700]="selectedCategory() !== null">
+      All Products
+    </button>
+    <button *ngFor="let category of categories()"
+            (click)="selectCategory(category.name)"
+            class="px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all"
+            [class.bg-blue-600]="selectedCategory() === category.name"
+            [class.text-white]="selectedCategory() === category.name"
+            [class.bg-white]="selectedCategory() !== category.name"
+            [class.text-gray-700]="selectedCategory() !== category.name">
+      {{ category.name }} ({{ category.count }})
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="flex items-center justify-center py-20">
+    <div class="flex flex-col items-center space-y-4">
+      <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <p class="text-gray-600 font-medium">Loading store...</p>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error()" class="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-800 mb-4">
+    <p class="font-bold">{{ error() }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && filteredProducts().length === 0" class="text-center py-20">
+    <div class="text-6xl mb-4">📦</div>
+    <h3 class="text-2xl font-bold text-gray-900 mb-2">No Products Found</h3>
+    <p class="text-gray-600">{{ searchQuery() ? 'Try a different search' : 'No products available' }}</p>
+  </div>
+
+  <!-- Products Grid -->
+  <div *ngIf="!isLoading() && filteredProducts().length > 0" 
+       class="grid grid-cols-2 gap-4 mb-4">
+    
+    <div *ngFor="let product of filteredProducts()" 
+         class="bg-white rounded-2xl shadow-md overflow-hidden">
+      
+      <!-- Product Image -->
+      <div class="relative aspect-square bg-gray-100">
+        <img *ngIf="product.imageUrl" 
+             [src]="product.imageUrl" 
+             [alt]="product.name"
+             class="w-full h-full object-cover"/>
+        <div *ngIf="!product.imageUrl" 
+             class="w-full h-full flex items-center justify-center text-6xl">
+          📦
+        </div>
+        
+        <!-- Discount Badge -->
+        <div *ngIf="product.hasDiscount" 
+             class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
+          -{{ product.discountPercentage }}%
+        </div>
+        
+        <!-- Stock Badge -->
+        <div *ngIf="product.stock < 10 && product.stock > 0" 
+             class="absolute top-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
+          Only {{ product.stock }} left
+        </div>
+        
+        <div *ngIf="product.stock === 0" 
+             class="absolute top-2 left-2 bg-gray-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
+          Out of Stock
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="p-3">
+        <h3 class="font-bold text-sm text-gray-900 truncate">{{ product.name }}</h3>
+        <p class="text-xs text-gray-600 truncate mt-1">{{ product.description }}</p>
+        
+        <!-- Price -->
+        <div class="flex items-center justify-between mt-3">
+          <div>
+            <span class="text-lg font-black text-blue-600">
+              ₹{{ product.discountPrice || product.price }}
+            </span>
+            <span *ngIf="product.hasDiscount" 
+                  class="text-xs text-gray-400 line-through ml-1">
+              ₹{{ product.price }}
+            </span>
+          </div>
+          
+          <!-- Add to Cart / Counter -->
+          <div *ngIf="getCartQuantity(product._id) === 0">
+            <button (click)="addToCart(product)"
+                    [disabled]="product.stock === 0"
+                    class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all">
+              {{ product.stock === 0 ? 'Out of Stock' : '+ Add' }}
+            </button>
+          </div>
+          
+          <div *ngIf="getCartQuantity(product._id) > 0" 
+               class="flex items-center gap-2 bg-blue-50 rounded-lg p-1">
+            <button (click)="removeFromCart(product._id)"
+                    class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-sm font-bold">
+              -
+            </button>
+            <span class="text-sm font-bold text-blue-900 min-w-[20px] text-center">
+              {{ getCartQuantity(product._id) }}
+            </span>
+            <button (click)="addToCart(product)"
+                    [disabled]="getCartQuantity(product._id) >= product.stock"
+                    class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-sm font-bold disabled:bg-gray-300">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Cart Button -->
+  <button *ngIf="cartItemCount() > 0"
+          (click)="goToCheckout()"
+          class="fixed bottom-24 right-6 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl shadow-2xl flex items-center space-x-3 z-50 hover:shadow-3xl transition-all transform hover:-translate-y-1">
+    <div class="relative">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+      </svg>
+      <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        {{ cartItemCount() }}
+      </span>
+    </div>
+    <div class="text-left">
+      <div class="text-xs opacity-90">View Cart</div>
+      <div class="font-bold text-lg">₹{{ cartTotal() }}</div>
+    </div>
+  </button>
+</div>

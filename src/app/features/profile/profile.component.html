@@ -1,0 +1,115 @@
+<div class="p-4 bg-gray-50 min-h-screen">
+  <div *ngIf="executiveData() === undefined" class="flex justify-center p-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+
+  <div *ngIf="executiveData() && !isEditing()" class="space-y-4">
+    <div class="bg-white rounded-lg p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Profile</h2>
+        <button
+          (click)="isEditing.set(true)"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 text-sm"
+        >
+          Edit
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <label class="text-gray-500 block">Name</label>
+          <div class="font-medium">{{ executiveData()?.name }}</div>
+        </div>
+        <div>
+          <label class="text-gray-500 block">ID</label>
+          <div class="font-medium">{{ executiveData()?.employeeId }}</div>
+        </div>
+        <div class="col-span-2">
+          <label class="text-gray-500 block">Email</label>
+          <div class="font-medium">{{ executiveData()?.email }}</div>
+        </div>
+        <div>
+          <label class="text-gray-500 block">Department</label>
+          <div class="font-medium capitalize">{{ executiveData()?.department }}</div>
+        </div>
+        <div>
+          <label class="text-gray-500 block">Designation</label>
+          <div class="font-medium">{{ executiveData()?.designation }}</div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      (click)="logout()"
+      class="w-full bg-red-50 text-red-600 border border-red-200 py-3 rounded-lg font-medium hover:bg-red-100 mt-4"
+    >
+      Sign Out
+    </button>
+  </div>
+
+  <div *ngIf="isEditing()" class="bg-white rounded-lg p-6 shadow-sm">
+    <h2 class="text-xl font-semibold mb-6">Edit Profile</h2>
+
+    <form (submit)="saveProfile(); $event.preventDefault()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <input
+          [(ngModel)]="formData().name"
+          name="name"
+          class="w-full p-3 border rounded-lg"
+          required
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+        <input
+          [(ngModel)]="formData().phone"
+          name="phone"
+          class="w-full p-3 border rounded-lg"
+          required
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+        <select
+          [(ngModel)]="formData().department"
+          name="dept"
+          class="w-full p-3 border rounded-lg bg-white"
+        >
+          <option value="sales">Sales</option>
+          <option value="marketing">Marketing</option>
+          <option value="operations">Operations</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+        <input
+          [(ngModel)]="formData().designation"
+          name="designation"
+          class="w-full p-3 border rounded-lg"
+          required
+        />
+      </div>
+
+      <div class="flex space-x-3 pt-4">
+        <button
+          type="submit"
+          [disabled]="isSubmitting()"
+          class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
+          {{ isSubmitting() ? 'Saving...' : 'Save Changes' }}
+        </button>
+        <button
+          type="button"
+          (click)="isEditing.set(false)"
+          class="px-4 py-3 border rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

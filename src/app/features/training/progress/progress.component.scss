@@ -1,0 +1,131 @@
+.progress-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  
+  .skeleton-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 70vh;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+    }
+  }
+
+  .stats-card {
+    .stats-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      
+      .metric-item {
+        text-align: center;
+        
+        .metric-number {
+          display: block;
+          font-size: 2rem;
+          font-weight: 700;
+          line-height: 1;
+          
+          &.success { color: #42ba96; }
+          &.info { color: #00d4aa; }
+          &.primary { color: var(--primary-color); }
+        }
+        
+        .metric-label {
+          display: block;
+          font-size: 0.875rem;
+          color: var(--text-color-secondary);
+          margin-top: 0.25rem;
+        }
+      }
+    }
+    
+    .overall-progress {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      
+      .progress-label {
+        font-weight: 600;
+        min-width: 120px;
+      }
+      
+      .progress-value {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--text-color);
+      }
+    }
+  }
+
+  .courses-section {
+    .progress-table {
+      .p-datatable-tbody > tr > td {
+        padding: 1.25rem;
+        vertical-align: middle;
+      }
+      
+      .course-info {
+        h4 {
+          margin: 0 0 0.25rem 0;
+          font-size: 1rem;
+        }
+        
+        .course-meta {
+          font-size: 0.875rem;
+          color: var(--text-color-secondary);
+        }
+      }
+      
+      .score {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+      
+      .score-placeholder {
+        color: var(--text-color-secondary);
+        font-style: italic;
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    
+    h3 {
+      margin: 1rem 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    
+    p {
+      color: var(--text-color-secondary);
+      margin-bottom: 2rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    
+    .stats-metrics {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .progress-table {
+      .p-datatable-tbody > tr > td {
+        padding: 0.75rem;
+      }
+    }
+  }
+}

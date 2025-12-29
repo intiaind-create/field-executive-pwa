@@ -1,0 +1,141 @@
+<div class="progress-container">
+  <!-- Loading Skeleton -->
+  <div *ngIf="isLoading()" class="skeleton-section">
+    <p-skeleton width="100%" height="200px"></p-skeleton>
+    <p-skeleton width="100%" height="300px"></p-skeleton>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !isLoading()" class="error-state">
+    <p-card header="Failed to Load Progress">
+      <div class="error-content">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ error() }}</p>
+        <p-button 
+          label="Retry" 
+          icon="pi pi-refresh" 
+          (onClick)="retry()"
+          severity="secondary">
+        </p-button>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Stats Overview -->
+  <div *ngIf="!isLoading() && !error()" class="stats-grid">
+    <p-card header="Training Statistics" class="stats-card">
+      <div class="stats-metrics">
+        <div class="metric-item">
+          <span class="metric-number">{{getStatsTotalCourses()}}</span>
+          <span class="metric-label">Total Courses</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number success">{{getStatsCompletedCourses()}}</span>
+          <span class="metric-label">Completed</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number info">{{getStatsInProgressCourses()}}</span>
+          <span class="metric-label">In Progress</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-number primary">{{getStatsQuizzesTotal()}}</span>
+          <span class="metric-label">Quizzes Taken</span>
+        </div>
+      </div>
+      <div class="overall-progress">
+        <span class="progress-label">Overall Completion</span>
+        <p-progressBar 
+          [value]="getStatsCompletionRate()" 
+          [showValue]="false"
+          [style]="{'height': '12px'}">
+        </p-progressBar>
+        <span class="progress-value">{{getStatsCompletionRate() | number:'1.0-0'}}%</span>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Courses Progress Table -->
+  <div *ngIf="!isLoading() && !error() && hasCourses()" class="courses-section">
+    <p-card header="Course Progress" class="courses-card">
+      <p-table 
+        [value]="courses()" 
+        styleClass="progress-table"
+        responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Course</th>
+            <th style="width: 200px;">Progress</th>
+            <th style="width: 120px;">Status</th>
+            <th style="width: 80px;">Score</th>
+            <th style="width: 120px;">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-course>
+          <tr>
+            <td>
+              <div class="course-info">
+                <h4>{{course.title}}</h4>
+                <span class="course-meta">
+                  {{course.category || 'General'}} • 
+                  {{course.totalModules || 0}} modules • 
+                  {{course.estimatedHours || 0}}h
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="progress-cell">
+                <p-progressBar 
+                  [value]="course.progress?.progressPercentage || 0" 
+                  [showValue]="false"
+                  [style]="{'height': '8px', 'margin-bottom': '0.25rem'}">
+                </p-progressBar>
+                <span class="progress-text">
+                  {{course.progress?.completedModules || 0}}/{{course.totalModules}} modules • 
+                  {{course.progress?.progressPercentage || 0 | number:'1.0-0'}}%
+                </span>
+              </div>
+            </td>
+            <td>
+              <p-badge 
+                [value]="course.progress?.status || 'not_started'" 
+                [severity]="getStatusSeverity(course.progress?.status || 'not_started')">
+              </p-badge>
+            </td>
+            <td>
+              <span *ngIf="course.progress?.finalScore" class="score">
+                {{course.progress.finalScore | number:'1.1-1'}}%
+              </span>
+              <span *ngIf="!course.progress?.finalScore" class="score-placeholder">—</span>
+            </td>
+            <td>
+              <p-button 
+                [label]="course.progress?.status === 'completed' ? 'Review' : 'Continue'" 
+                size="small"
+                [routerLink]="['/training/progress', course.courseId]"
+                [severity]="course.progress?.status === 'completed' ? 'secondary' : 'primary'">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center">No courses found.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && !error() && !hasCourses()" class="empty-state">
+    <i class="pi pi-chart-line" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
+    <h3>No Progress Yet</h3>
+    <p>Start your first training course to see your progress here.</p>
+    <p-button 
+      label="Browse Courses" 
+      routerLink="/training"
+      icon="pi pi-arrow-right"
+      severity="primary">
+    </p-button>
+  </div>
+</div>

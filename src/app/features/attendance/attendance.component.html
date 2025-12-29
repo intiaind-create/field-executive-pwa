@@ -1,0 +1,135 @@
+<div class="p-4 bg-gray-50 min-h-screen">
+
+  <div class="flex space-x-1 mb-4 bg-gray-200 rounded-lg p-1">
+    <button (click)="activeTab.set('today')"
+      class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+      [ngClass]="activeTab() === 'today' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'">
+      Today
+    </button>
+    <button (click)="activeTab.set('history')"
+      class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+      [ngClass]="activeTab() === 'history' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'">
+      History
+    </button>
+    <button (click)="activeTab.set('summary')"
+      class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+      [ngClass]="activeTab() === 'summary' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'">
+      Summary
+    </button>
+  </div>
+
+  <div *ngIf="activeTab() === 'today'" class="space-y-6">
+    
+    <div class="bg-white rounded-lg p-6 shadow-sm text-center">
+      <div class="text-3xl font-bold text-gray-900 mb-1">
+        {{ currentTime() | date:'shortTime' }}
+      </div>
+      <div class="text-sm text-gray-600">
+        {{ currentTime() | date:'fullDate' }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <button (click)="handleCheckIn()"
+        [disabled]="todayAttendance()?.checkInTime || isProcessing()"
+        class="py-4 rounded-lg font-medium text-white transition disabled:opacity-50"
+        [ngClass]="(!todayAttendance()?.checkInTime && !isProcessing()) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'">
+        {{ isProcessing() ? 'Processing...' : 'Check In' }}
+      </button>
+      
+      <button (click)="handleCheckOut()"
+        [disabled]="!todayAttendance()?.checkInTime || todayAttendance()?.checkOutTime || isProcessing()"
+        class="py-4 rounded-lg font-medium text-white transition disabled:opacity-50"
+        [ngClass]="(todayAttendance()?.checkInTime && !todayAttendance()?.checkOutTime && !isProcessing()) ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400'">
+        {{ isProcessing() ? 'Processing...' : 'Check Out' }}
+      </button>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 shadow-sm">
+      <h3 class="font-semibold text-gray-900 mb-3">Today's Status</h3>
+      
+      <div *ngIf="!todayAttendance()" class="text-center py-4 text-gray-500">
+        <div class="text-2xl mb-2">⏰</div>
+        <p>Not checked in yet</p>
+      </div>
+
+      <div *ngIf="todayAttendance() as attendance" class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-gray-600">Status:</span>
+          <span class="font-medium text-green-600">
+            {{ attendance.checkOutTime ? "Checked Out" : "Checked In" }}
+          </span>
+        </div>
+
+        <div class="flex justify-between" *ngIf="attendance.checkInTime">
+          <span class="text-gray-600">Check In:</span>
+          <span class="font-medium">
+            {{ attendance.checkInTime | date:'shortTime' }}
+          </span>
+        </div>
+
+        <div *ngIf="attendance.checkOutTime" class="flex justify-between">
+          <span class="text-gray-600">Check Out:</span>
+          <span class="font-medium">
+            {{ attendance.checkOutTime | date:'shortTime' }}
+          </span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-600">Working Hours:</span>
+          <span class="font-medium">{{ workingHours() }} hrs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab() === 'history'" class="space-y-3">
+    <div *ngFor="let record of history()" class="bg-white rounded-lg p-4 shadow-sm">
+      <div class="flex justify-between items-start mb-2">
+        <div class="font-medium text-gray-900">
+          {{ record.date | date:'fullDate' }}
+        </div>
+        <span class="px-2 py-1 rounded-full text-xs font-medium" 
+              [ngClass]="getStatusColor(record.status)">
+          {{ record.status | uppercase }}
+        </span>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4 text-sm" *ngIf="record.checkInTime">
+        <div>
+          <span class="text-gray-500">In:</span>
+          <div class="font-medium">{{ record.checkInTime | date:'shortTime' }}</div>
+        </div>
+        <div *ngIf="record.checkOutTime">
+          <span class="text-gray-500">Out:</span>
+          <div class="font-medium">{{ record.checkOutTime | date:'shortTime' }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="history().length === 0" class="text-center py-8 text-gray-500">
+      <p>No records found.</p>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab() === 'summary'" class="space-y-4">
+    <div *ngIf="summary() as stats" class="bg-white rounded-lg p-4 shadow-sm">
+      <h3 class="font-semibold text-gray-900 mb-4">This Month</h3>
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div>
+          <div class="text-2xl font-bold text-green-600">{{ stats.presentDays }}</div>
+          <div class="text-sm text-gray-600">Present</div>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-blue-600">{{ stats.totalHours | number:'1.0-1' }}</div>
+          <div class="text-sm text-gray-600">Hours</div>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="!summary()" class="text-center py-8 text-gray-500">
+      <p>Loading summary...</p>
+    </div>
+  </div>
+
+</div>

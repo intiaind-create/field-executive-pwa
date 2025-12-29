@@ -1,0 +1,283 @@
+<nav
+  class="fixed bottom-0 left-0 right-0 z-[9999] md:hidden bg-white border-t border-gray-200 shadow-2xl"
+>
+  <div class="flex items-center justify-around px-2 py-3 h-20">
+    <!-- 1. Home/Dashboard -->
+    <a
+      routerLink="/dashboard"
+      [class.bg-blue-50]="isActive('dashboard')"
+      class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition-colors flex-1"
+    >
+      <div class="relative mb-1">
+        <svg
+          class="w-6 h-6 transition-colors"
+          [class.text-blue-600]="isActive('dashboard')"
+          [class.text-gray-700]="!isActive('dashboard')"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        </svg>
+        <span
+          *ngIf="pendingTasks() > 0"
+          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg"
+        >
+          {{ pendingTasks() > 9 ? '9+' : pendingTasks() }}
+        </span>
+      </div>
+      <span
+        class="text-xs font-medium transition-colors"
+        [class.text-blue-600]="isActive('dashboard')"
+        [class.text-gray-700]="!isActive('dashboard')"
+      >
+        Home
+      </span>
+    </a>
+
+    <!-- 2. Tasks -->
+    <a
+      routerLink="/tasks"
+      [class.bg-blue-50]="isActive('tasks')"
+      class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition-colors flex-1"
+    >
+      <svg
+        class="w-6 h-6 mb-1 transition-colors"
+        [class.text-blue-600]="isActive('tasks')"
+        [class.text-gray-700]="!isActive('tasks')"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+        />
+      </svg>
+      <span
+        class="text-xs font-medium transition-colors"
+        [class.text-blue-600]="isActive('tasks')"
+        [class.text-gray-700]="!isActive('tasks')"
+      >
+        Tasks
+      </span>
+    </a>
+
+    <!-- 3. Attendance (Center) -->
+    <div class="flex-1 flex justify-center">
+      <a
+        routerLink="/attendance"
+        class="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-xl rounded-2xl flex items-center justify-center -mt-6 relative transition-all duration-200 active:scale-95"
+      >
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
+        </svg>
+        <div
+          class="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-md flex items-center justify-center"
+        >
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        </div>
+        <span
+          *ngIf="pendingOfflineActions() > 0"
+          class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg"
+        >
+          {{ pendingOfflineActions() > 9 ? '9+' : pendingOfflineActions() }}
+        </span>
+      </a>
+    </div>
+
+    <!-- 4. Training -->
+    <a
+      routerLink="/training"
+      [class.bg-blue-50]="isActive('training')"
+      class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition-colors flex-1"
+    >
+      <svg
+        class="w-6 h-6 mb-1 transition-colors"
+        [class.text-blue-600]="isActive('training')"
+        [class.text-gray-700]="!isActive('training')"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+        />
+      </svg>
+      <span
+        class="text-xs font-medium transition-colors"
+        [class.text-blue-600]="isActive('training')"
+        [class.text-gray-700]="!isActive('training')"
+      >
+        Training
+      </span>
+    </a>
+
+    <!-- 5. More (with Popup Menu) -->
+    <div class="flex-1 flex justify-center relative more-menu-container">
+      <button
+        (click)="toggleMoreMenu($event)"
+        [class.bg-blue-50]="isActive('settings') || showMoreMenu()"
+        class="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition-colors w-full"
+      >
+        <svg
+          class="w-6 h-6 mb-1 transition-colors"
+          [class.text-blue-600]="isActive('settings') || showMoreMenu()"
+          [class.text-gray-700]="!isActive('settings') && !showMoreMenu()"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+        <span
+          class="text-xs font-medium transition-colors"
+          [class.text-blue-600]="isActive('settings') || showMoreMenu()"
+          [class.text-gray-700]="!isActive('settings') && !showMoreMenu()"
+        >
+          More
+        </span>
+      </button>
+
+      <!-- ✅ Popup Menu -->
+      <div
+        *ngIf="showMoreMenu()"
+        class="absolute bottom-full mb-2 right-0 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden w-48 z-[10000]"
+      >
+        <!-- ✅ NEW: Quizzes -->
+        <button
+          (click)="navigateAndClose('/training/quiz')"
+          class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+        >
+          <div
+            class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0"
+          >
+            <svg
+              class="w-5 h-5 text-indigo-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-gray-900">Quizzes</div>
+            <div class="text-xs text-gray-500">Test your knowledge</div>
+          </div>
+        </button>
+
+        <!-- ✅ NEW: Progress -->
+        <button
+          (click)="navigateAndClose('/training/progress')"
+          class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100 text-left"
+        >
+          <div
+            class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0"
+          >
+            <svg
+              class="w-5 h-5 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-gray-900">Progress</div>
+            <div class="text-xs text-gray-500">Track completion</div>
+          </div>
+        </button>
+
+        <!-- Store -->
+        <button
+          (click)="navigateAndClose('/store')"
+          class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100 text-left"
+        >
+          <div
+            class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"
+          >
+            <svg
+              class="w-5 h-5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-gray-900">Store</div>
+            <div class="text-xs text-gray-500">Order supplies</div>
+          </div>
+        </button>
+
+        <!-- Profile -->
+        <button
+          (click)="navigateAndClose('/profile')"
+          class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100 text-left"
+        >
+          <div
+            class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0"
+          >
+            <svg
+              class="w-5 h-5 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-gray-900">Profile</div>
+            <div class="text-xs text-gray-500">Your info</div>
+          </div>
+        </button>
+
+     
+      </div>
+    </div>
+  </div>
+</nav>

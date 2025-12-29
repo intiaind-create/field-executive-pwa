@@ -1,0 +1,309 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 pb-32">
+  <div class="max-w-6xl mx-auto">
+    
+    <!-- Header with Back Button -->
+    <div class="flex items-center justify-between mb-8">
+      <button (click)="goBack()" 
+              class="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-bold text-lg transition-all hover:space-x-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>Back to Orders</span>
+      </button>
+      <div class="text-gray-600 font-bold">Order Details</div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="flex items-center justify-center py-32">
+      <div class="flex flex-col items-center space-y-4">
+        <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <p class="text-gray-600 font-medium text-lg">Loading order details...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error() && !isLoading()" class="bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center">
+      <div class="text-6xl mb-4">⚠️</div>
+      <h3 class="text-2xl font-bold text-red-800 mb-2">{{ error() }}</h3>
+      <p class="text-red-700 mb-6">We couldn't load your order. Please try again.</p>
+      <p-button label="Go Back" (click)="goBack()" icon="pi pi-arrow-left"></p-button>
+    </div>
+
+    <!-- Order Content -->
+    <div *ngIf="order() && !isLoading() && !error()">
+      
+      <!-- Order Header Card -->
+      <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-3xl shadow-2xl p-8 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Order Number & Items -->
+          <div>
+            <div class="text-sm opacity-90 mb-2">Order Number</div>
+            <h1 class="text-3xl font-black mb-4">#{{ order()?.orderNumber }}</h1>
+            <div class="text-sm opacity-90">
+              <span class="font-bold text-lg">{{ (order()?.items?.length || 0) }}</span> items
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="flex items-center justify-center">
+            <div class="text-center">
+              <div class="text-4xl mb-3">{{ getStatusIcon(order()?.status || '') }}</div>
+              <p-tag [value]="(order()?.status || 'pending').toUpperCase()" 
+                     [severity]="getStatusColor(order()?.status || '')"
+                     class="text-base font-bold">
+              </p-tag>
+              <div class="text-sm opacity-90 mt-3">Order Status</div>
+            </div>
+          </div>
+
+          <!-- Total Amount -->
+          <div class="text-right">
+            <div class="text-sm opacity-90 mb-2">Total Amount</div>
+            <div class="text-4xl font-black mb-4">{{ formatCurrency(order()?.total || 0) }}</div>
+            <div class="text-xs opacity-75">Placed on {{ formatDate(order()?.createdAt || 0) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left: Order Items (wider) -->
+        <div class="lg:col-span-2">
+          <!-- Order Items Card -->
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50 mb-8">
+            <h2 class="text-2xl font-black text-gray-900 mb-8 flex items-center">
+              <span class="text-3xl mr-3">📦</span> Order Items
+            </h2>
+            
+            <div *ngFor="let item of order()?.items; let last = last" [class.mb-6]="!last">
+              <div class="flex items-center space-x-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl hover:shadow-lg transition-all">
+                <!-- Product Icon -->
+                <div class="w-24 h-24 bg-white rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 shadow-sm border-2 border-blue-100">
+                  📦
+                </div>
+
+                <!-- Product Details -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-xl text-gray-900 mb-2 truncate">{{ item.productName }}</h3>
+                  
+                  <!-- Product Info Row -->
+                  <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
+                    <div class="flex items-center space-x-1">
+                      <span class="font-bold">Qty:</span>
+                      <span>{{ item.quantity }}</span>
+                    </div>
+                    <div class="w-1 h-1 bg-gray-400 rounded-full"></div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-bold">Price:</span>
+                      <span>₹{{ item.unitPrice }}</span>
+                    </div>
+                    <div class="w-1 h-1 bg-gray-400 rounded-full"></div>
+                    <div class="flex items-center space-x-1">
+                      <span class="font-bold">Total:</span>
+                      <span>₹{{ item.quantity * item.unitPrice }}</span>
+                    </div>
+                  </div>
+
+                  <!-- SKU (if available) -->
+                  <div class="text-xs text-gray-500">
+                    Product ID: <span class="font-mono">{{ item.productId }}</span>
+                  </div>
+                </div>
+
+                <!-- Price Box -->
+                <div class="text-right flex-shrink-0">
+                  <div class="text-3xl font-black text-blue-600">
+                    ₹{{ item.totalPrice }}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    {{ item.quantity }} × ₹{{ item.unitPrice }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline (Optional) -->
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50">
+            <h2 class="text-2xl font-black text-gray-900 mb-8 flex items-center">
+              <span class="text-3xl mr-3">📍</span> Delivery Status
+            </h2>
+            
+            <div class="space-y-6">
+              <div class="flex items-start space-x-4">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center flex-shrink-0 font-bold">
+                  1
+                </div>
+                <div>
+                  <div class="font-bold text-lg text-gray-900">Order Placed</div>
+                  <div class="text-sm text-gray-600">{{ formatDate(order()?.createdAt || 0) }}</div>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4" [class.opacity-50]="order()?.status === 'pending'">
+                <div [class.bg-blue-100]="order()?.status !== 'pending'" 
+                     [class.text-blue-600]="order()?.status !== 'pending'"
+                     [class.bg-gray-100]="order()?.status === 'pending'"
+                     [class.text-gray-400]="order()?.status === 'pending'"
+                     class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold">
+                  2
+                </div>
+                <div>
+                  <div class="font-bold text-lg" [class.text-gray-900]="order()?.status !== 'pending'" [class.text-gray-500]="order()?.status === 'pending'">
+                    Confirmed
+                  </div>
+                  <div class="text-sm text-gray-600">Preparing your order</div>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4" [class.opacity-50]="['pending', 'confirmed'].includes(order()?.status || '')">
+                <div [class.bg-blue-100]="!['pending', 'confirmed'].includes(order()?.status || '')" 
+                     [class.text-blue-600]="!['pending', 'confirmed'].includes(order()?.status || '')"
+                     [class.bg-gray-100]="['pending', 'confirmed'].includes(order()?.status || '')"
+                     [class.text-gray-400]="['pending', 'confirmed'].includes(order()?.status || '')"
+                     class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold">
+                  3
+                </div>
+                <div>
+                  <div class="font-bold text-lg" [class.text-gray-900]="!['pending', 'confirmed'].includes(order()?.status || '')" [class.text-gray-500]="['pending', 'confirmed'].includes(order()?.status || '')">
+                    Shipped
+                  </div>
+                  <div class="text-sm text-gray-600">On the way to you</div>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4" [class.opacity-50]="order()?.status !== 'delivered'">
+                <div [class.bg-green-100]="order()?.status === 'delivered'" 
+                     [class.text-green-600]="order()?.status === 'delivered'"
+                     [class.bg-gray-100]="order()?.status !== 'delivered'"
+                     [class.text-gray-400]="order()?.status !== 'delivered'"
+                     class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold">
+                  4
+                </div>
+                <div>
+                  <div class="font-bold text-lg" [class.text-gray-900]="order()?.status === 'delivered'" [class.text-gray-500]="order()?.status !== 'delivered'">
+                    Delivered
+                  </div>
+                  <div class="text-sm text-gray-600">Successfully delivered</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Payment & Shipping (narrower) -->
+        <div class="lg:col-span-1 space-y-8">
+          
+          <!-- Payment Card -->
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50">
+            <h2 class="text-2xl font-black text-gray-900 mb-6 flex items-center">
+              <span class="text-3xl mr-3">💳</span> Payment
+            </h2>
+            
+            <div *ngIf="order()?.razorpayPaymentId" class="mb-6">
+              <div class="flex items-center space-x-3 mb-4 p-4 bg-green-50 rounded-2xl border-2 border-green-200">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">✓</div>
+                <div>
+                  <div class="font-bold text-green-900">Paid via Razorpay</div>
+                  <div class="text-xs text-green-700">Online Payment</div>
+                </div>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-2xl border-l-4 border-green-500">
+                <div class="text-xs text-gray-600 font-bold mb-2">Payment ID</div>
+                <div class="text-sm text-gray-900 font-mono break-all">
+                  {{ order()?.razorpayPaymentId }}
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!order()?.razorpayPaymentId" class="bg-blue-50 p-4 rounded-2xl text-center border-2 border-blue-200">
+              <div class="text-3xl mb-2">🏠</div>
+              <div class="font-bold text-blue-900 text-lg">Cash on Delivery</div>
+              <div class="text-sm text-blue-700 mt-1">Pay when you receive</div>
+            </div>
+          </div>
+
+          <!-- Price Breakdown -->
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50">
+            <h2 class="text-xl font-black text-gray-900 mb-6">Price Breakdown</h2>
+            
+            <div class="space-y-3">
+              <div class="flex justify-between text-lg text-gray-700">
+                <span>Subtotal</span>
+                <span class="font-bold">{{ formatCurrency(order()?.subtotal || 0) }}</span>
+              </div>
+              <div class="flex justify-between text-lg text-gray-700">
+                <span>GST (18%)</span>
+                <span class="font-bold text-orange-600">{{ formatCurrency(order()?.tax || 0) }}</span>
+              </div>
+              <div class="flex justify-between text-lg text-gray-700">
+                <span>Shipping</span>
+                <span class="font-bold">{{ formatCurrency(order()?.shipping || 0) }}</span>
+              </div>
+              
+              <div class="h-px bg-gradient-to-r from-blue-200 to-indigo-200 my-4"></div>
+              
+              <div class="flex justify-between text-2xl font-black text-gray-900 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl">
+                <span>Total</span>
+                <span class="text-blue-600">{{ formatCurrency(order()?.total || 0) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Address -->
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50">
+            <h2 class="text-2xl font-black text-gray-900 mb-6 flex items-center">
+              <span class="text-3xl mr-3">📍</span> Delivery
+            </h2>
+            
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-100">
+              <div class="font-bold text-xl text-gray-900 mb-3">{{ order()?.shipToName || 'N/A' }}</div>
+              
+              <div class="space-y-2 text-gray-700 mb-4">
+                <div class="flex items-start space-x-2">
+                  <span class="text-lg">📦</span>
+                  <div>{{ order()?.shipToAddress || 'N/A' }}</div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏙️</span>
+                  <span>{{ order()?.shipToCity }}, {{ order()?.shipToState }}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">📮</span>
+                  <span>{{ order()?.shipToPincode }}</span>
+                </div>
+              </div>
+
+              <div class="border-t border-blue-200 pt-4">
+                <div class="flex items-center space-x-2 text-blue-900 font-bold">
+                  <span class="text-lg">📞</span>
+                  <span>{{ order()?.shipToPhone || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="space-y-3">
+            <p-button 
+              label="Download Invoice" 
+              icon="pi pi-download"
+              (click)="downloadInvoice()"
+              class="w-full"
+              [style]="{'font-weight': 'bold', 'height': '50px'}">
+            </p-button>
+            <p-button 
+              label="Contact Support" 
+              icon="pi pi-phone"
+              (click)="contactSupport()"
+              severity="secondary"
+              class="w-full"
+              [style]="{'font-weight': 'bold', 'height': '50px'}">
+            </p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

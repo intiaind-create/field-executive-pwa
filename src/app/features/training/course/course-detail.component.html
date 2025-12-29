@@ -1,0 +1,173 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 pb-32">
+  
+  <!-- Back Button -->
+  <button routerLink="/training" 
+          class="flex items-center text-blue-600 font-bold mb-4 hover:text-blue-700">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+    </svg>
+    Back to Courses
+  </button>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="flex items-center justify-center py-20">
+    <div class="flex flex-col items-center space-y-4">
+      <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <p class="text-gray-600 font-medium">Loading course...</p>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error()" class="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-800 mb-4">
+    <p class="font-bold">{{ error() }}</p>
+  </div>
+
+  <!-- Course Content -->
+  <div *ngIf="!isLoading() && course()">
+    
+    <!-- Course Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+      <h1 class="text-3xl font-black text-gray-900 mb-2">{{ course()!.title }}</h1>
+      <p class="text-gray-600 mb-4">{{ course()!.description }}</p>
+      
+      <!-- Meta Info -->
+      <div class="flex flex-wrap gap-3 mb-4">
+        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-bold">
+          {{ course()!.category }}
+        </span>
+        <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-lg text-sm font-bold">
+          {{ course()!.difficulty | titlecase }}
+        </span>
+        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm font-bold">
+          {{ course()!.estimatedHours }}h
+        </span>
+        <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-sm font-bold">
+          Pass: {{ course()!.passingScore }}%
+        </span>
+      </div>
+
+      <!-- Progress (if enrolled) -->
+      <div *ngIf="course()!.myProgress as progress">
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-sm font-bold text-gray-700">Progress</span>
+          <span class="text-sm font-bold text-gray-700">
+            {{ progress.completedModules }} / {{ progress.totalModules }} Modules
+          </span>
+        </div>
+        
+        <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+               [style.width.%]="progress.progressPercentage"></div>
+        </div>
+        
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600">{{ progress.progressPercentage }}% Complete</span>
+          <span *ngIf="progress.finalScore" 
+                class="font-bold"
+                [class.text-green-600]="progress.finalScore >= course()!.passingScore"
+                [class.text-red-600]="progress.finalScore < course()!.passingScore">
+            Score: {{ progress.finalScore }}%
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules List -->
+    <div class="space-y-3">
+      <h2 class="text-xl font-black text-gray-900 mb-4">Course Modules</h2>
+      
+      <div *ngFor="let module of course()!.modules; let i = index" 
+           class="bg-white rounded-2xl shadow-md overflow-hidden">
+        
+        <div class="p-4">
+          <!-- Module Header -->
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-start flex-1">
+              <!-- Icon & Number -->
+              <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                <span class="text-lg">{{ getModuleIcon(module.contentType) }}</span>
+              </div>
+              
+              <!-- Title & Description -->
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs font-bold text-gray-500">Module {{ module.order }}</span>
+                  <span *ngIf="module.isRequired" 
+                        class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs font-bold">
+                    Required
+                  </span>
+                </div>
+                <h3 class="font-bold text-gray-900 mb-1">{{ module.title }}</h3>
+                <p class="text-sm text-gray-600">{{ module.description }}</p>
+              </div>
+            </div>
+
+            <!-- Status Icon -->
+            <div class="flex-shrink-0 ml-2 text-2xl">
+              {{ getStatusIcon(module.progress?.status || 'not_started') }}
+            </div>
+          </div>
+
+          <!-- Module Meta -->
+          <div class="flex items-center gap-4 text-xs text-gray-500 mb-3 ml-13">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              {{ module.estimatedMinutes }} min
+            </div>
+            <div class="flex items-center capitalize">
+              {{ module.contentType }}
+            </div>
+          </div>
+
+          <!-- Progress Info (if in progress or completed) -->
+          <div *ngIf="module.progress && module.progress.status !== 'not_started'" 
+               class="ml-13 mb-3 p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600">
+                {{ module.progress.status === 'completed' ? 'Completed' : 'In Progress' }}
+              </span>
+              <span *ngIf="module.progress.score !== undefined" 
+                    class="font-bold text-gray-900">
+                Score: {{ module.progress.score }}%
+              </span>
+            </div>
+            <div *ngIf="module.progress.completedAt" class="text-xs text-gray-500 mt-1">
+              Completed {{ module.progress.completedAt | date:'MMM d, h:mm a' }}
+            </div>
+          </div>
+
+          <!-- Action Button - ALWAYS SHOW for debugging -->
+          <button (click)="startModule(module)"
+                  [disabled]="isStartingModule()"
+                  class="w-full px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center"
+                  [class.bg-blue-600]="!module.progress || module.progress.status === 'not_started'"
+                  [class.text-white]="!module.progress || module.progress.status === 'not_started'"
+                  [class.hover:bg-blue-700]="!module.progress || module.progress.status === 'not_started'"
+                  [class.bg-orange-100]="module.progress?.status === 'in_progress'"
+                  [class.text-orange-800]="module.progress?.status === 'in_progress'"
+                  [class.bg-green-100]="module.progress?.status === 'completed'"
+                  [class.text-green-800]="module.progress?.status === 'completed'"
+                  [class.opacity-50]="isStartingModule()"
+                  [class.cursor-not-allowed]="isStartingModule()">
+            <span *ngIf="!isStartingModule()">
+              <span *ngIf="!module.progress || module.progress.status === 'not_started'">Start Module</span>
+              <span *ngIf="module.progress?.status === 'in_progress'">Continue</span>
+              <span *ngIf="module.progress?.status === 'completed'">Review</span>
+            </span>
+            <span *ngIf="isStartingModule()" class="flex items-center">
+              <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading...
+            </span>
+          </button>
+
+         
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
