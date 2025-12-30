@@ -33,26 +33,35 @@ export class AttendanceComponent {
   currentTime = signal(new Date());
   isProcessing = signal(false);
 
-  // ✅ Nullable for loading state
+  // ✅ Raw attendance from backend
   todayAttendance = toSignal<AttendanceRecord | null>(
     this.convex.watch(api.attendance.queries.getTodayAttendance),
     { initialValue: null }
   );
 
-  // ✅ Array type (non-nullable)
-history = toSignal(
-  this.convex.watch(api.attendance.queries.getHistory) as Observable<AttendanceRecord[]>,
-  { initialValue: [] as AttendanceRecord[] }
-);
+  // 🔥 NEW - Validate it's actually today's record
+  todayAttendanceValidated = computed(() => {
+    const attendance = this.todayAttendance();
+    if (!attendance) return null;
+    
+    const today = new Date().toISOString().split('T')[0];
+    if (attendance.date !== today) return null; // ❌ Old record, ignore it
+    
+    return attendance; // ✅ Valid today's record
+  });
 
-  // ✅ Nullable for loading state
+  history = toSignal(
+    this.convex.watch(api.attendance.queries.getHistory) as Observable<AttendanceRecord[]>,
+    { initialValue: [] as AttendanceRecord[] }
+  );
+
   summary = toSignal<AttendanceSummary | null>(
     this.convex.watch(api.attendance.queries.getStats),
     { initialValue: null }
   );
 
   workingHours = computed(() => {
-    const data = this.todayAttendance();
+    const data = this.todayAttendanceValidated(); // 🔥 Use validated
     if (!data?.checkInTime) return '0.0';
     
     if (data.checkOutTime) {

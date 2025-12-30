@@ -31,16 +31,16 @@
 
     <div class="grid grid-cols-2 gap-4">
       <button (click)="handleCheckIn()"
-        [disabled]="todayAttendance()?.checkInTime || isProcessing()"
+        [disabled]="todayAttendanceValidated()?.checkInTime || isProcessing()"
         class="py-4 rounded-lg font-medium text-white transition disabled:opacity-50"
-        [ngClass]="(!todayAttendance()?.checkInTime && !isProcessing()) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'">
+        [ngClass]="(!todayAttendanceValidated()?.checkInTime && !isProcessing()) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'">
         {{ isProcessing() ? 'Processing...' : 'Check In' }}
       </button>
       
       <button (click)="handleCheckOut()"
-        [disabled]="!todayAttendance()?.checkInTime || todayAttendance()?.checkOutTime || isProcessing()"
+        [disabled]="!todayAttendanceValidated()?.checkInTime || todayAttendanceValidated()?.checkOutTime || isProcessing()"
         class="py-4 rounded-lg font-medium text-white transition disabled:opacity-50"
-        [ngClass]="(todayAttendance()?.checkInTime && !todayAttendance()?.checkOutTime && !isProcessing()) ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400'">
+        [ngClass]="(todayAttendanceValidated()?.checkInTime && !todayAttendanceValidated()?.checkOutTime && !isProcessing()) ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400'">
         {{ isProcessing() ? 'Processing...' : 'Check Out' }}
       </button>
     </div>
@@ -48,12 +48,12 @@
     <div class="bg-white rounded-lg p-4 shadow-sm">
       <h3 class="font-semibold text-gray-900 mb-3">Today's Status</h3>
       
-      <div *ngIf="!todayAttendance()" class="text-center py-4 text-gray-500">
+      <div *ngIf="!todayAttendanceValidated()" class="text-center py-4 text-gray-500">
         <div class="text-2xl mb-2">⏰</div>
         <p>Not checked in yet</p>
       </div>
 
-      <div *ngIf="todayAttendance() as attendance" class="space-y-3">
+      <div *ngIf="todayAttendanceValidated() as attendance" class="space-y-3">
         <div class="flex justify-between">
           <span class="text-gray-600">Status:</span>
           <span class="font-medium text-green-600">
