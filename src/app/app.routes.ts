@@ -20,6 +20,7 @@ import { ProgressComponent } from './features/training/progress/progress.compone
 import { QuizListComponent } from './features/training/quiz/quiz-list/quiz-list.component';
 import { QuizResultsComponent } from './features/training/quiz/quiz-result/quiz-results.component';
 import { QuizTakeComponent } from './features/training/quiz/quiz-take/quiz-take.component';
+import { TaskDetailComponent } from './features/tasks/task-detail/task-detail.component';
 
 export const routes: Routes = [
   // ============================================================================
@@ -64,6 +65,10 @@ export const routes: Routes = [
         component: TasksComponent,
       },
       {
+        path: 'tasks/:id', // ✅ Add this
+        component: TaskDetailComponent,
+      },
+      {
         path: 'attendance',
         component: AttendanceComponent,
       },
@@ -87,7 +92,7 @@ export const routes: Routes = [
         path: 'training/certificates',
         component: CertificatesComponent,
       },
-      
+
       // ✅ Quiz Routes (specific routes FIRST)
       {
         path: 'training/quiz',
