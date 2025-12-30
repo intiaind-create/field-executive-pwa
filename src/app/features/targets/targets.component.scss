@@ -1,0 +1,26 @@
+// targets.component.scss
+
+// Smooth transitions
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Mobile-optimized card
+.bg-white {
+  -webkit-tap-highlight-color: transparent;
+}
+
+// Progress bar animations
+.h-3,
+.h-2 {
+  > div {
+    transition: width 0.5s ease-out;
+  }
+}
+
+// Button active state
+button:active {
+  transform: scale(0.95);
+}

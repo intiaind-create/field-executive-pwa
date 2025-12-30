@@ -1,0 +1,236 @@
+<!-- targets.component.html -->
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pb-24">
+  <!-- Header -->
+  <div class="sticky top-0 z-10 bg-white shadow-md">
+    <div class="px-4 py-4">
+      <div class="flex items-center justify-between">
+        <button
+          (click)="goBack()"
+          class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <h1 class="text-xl font-bold text-gray-900">My Targets</h1>
+        <button
+          (click)="refresh()"
+          class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex border-t border-gray-200">
+      <button
+        (click)="filterTargets('active')"
+        [class.bg-blue-50]="selectedFilter() === 'active'"
+        [class.text-blue-600]="selectedFilter() === 'active'"
+        [class.border-blue-600]="selectedFilter() === 'active'"
+        class="flex-1 py-3 text-sm font-semibold text-gray-600 border-b-2 border-transparent transition-colors"
+      >
+        Active
+      </button>
+      <button
+        (click)="filterTargets('all')"
+        [class.bg-blue-50]="selectedFilter() === 'all'"
+        [class.text-blue-600]="selectedFilter() === 'all'"
+        [class.border-blue-600]="selectedFilter() === 'all'"
+        class="flex-1 py-3 text-sm font-semibold text-gray-600 border-b-2 border-transparent transition-colors"
+      >
+        All
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="flex justify-center items-center py-20">
+    <div class="flex flex-col items-center space-y-4">
+      <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <div class="text-gray-600">Loading targets...</div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !isLoading()" class="p-4">
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+      <svg class="w-12 h-12 mx-auto text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <p class="text-red-800 font-medium">{{ error() }}</p>
+      <button
+        (click)="refresh()"
+        class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg font-medium"
+      >
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && !error() && targets().length === 0" class="p-4">
+    <div class="bg-white rounded-2xl p-8 text-center shadow-md">
+      <div class="text-6xl mb-4">🎯</div>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">No Targets Yet</h3>
+      <p class="text-gray-600">Your targets will appear here once assigned</p>
+    </div>
+  </div>
+
+  <!-- Targets List -->
+  <div *ngIf="!isLoading() && !error() && targets().length > 0" class="p-4 space-y-4">
+    <div
+      *ngFor="let target of targets()"
+      class="bg-white rounded-2xl shadow-lg overflow-hidden"
+    >
+      <!-- Header -->
+      <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-2">
+            <div
+              class="px-3 py-1 rounded-full text-xs font-bold text-white"
+              [style.backgroundColor]="getPeriodColor(target.period)"
+            >
+              {{ target.period | uppercase }}
+            </div>
+            <div
+              *ngIf="target.isOnTrack"
+              class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold"
+            >
+              ✓ ON TRACK
+            </div>
+            <div
+              *ngIf="!target.isOnTrack"
+              class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold"
+            >
+              ⚠ BEHIND
+            </div>
+          </div>
+          <div class="text-sm font-medium text-gray-600">
+            {{ target.daysRemaining }} days left
+          </div>
+        </div>
+        <div class="text-xs text-gray-600">
+          {{ formatDateRange(target.startDate, target.endDate) }}
+        </div>
+      </div>
+
+      <!-- Overall Progress -->
+      <div class="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Overall Progress</span>
+          <span
+            class="text-2xl font-black"
+            [style.color]="getProgressColor(target.overallProgress)"
+          >
+            {{ target.overallProgress }}%
+          </span>
+        </div>
+        <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            class="h-full rounded-full transition-all duration-300"
+            [style.width.%]="target.overallProgress"
+            [style.backgroundColor]="getProgressColor(target.overallProgress)"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="p-4 space-y-4">
+        <!-- Sponsorship -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="text-lg">💰</div>
+              <span class="text-sm font-medium text-gray-700">Sponsorship</span>
+            </div>
+            <span class="text-sm font-bold text-green-600">
+              {{ target.sponsorshipProgress }}%
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between text-xs text-gray-600">
+            <span class="font-bold text-gray-900">
+              {{ formatCurrency(target.sponsorshipAchieved) }}
+            </span>
+            <span>/ {{ formatCurrency(target.sponsorshipTarget) }}</span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full"
+              [style.width.%]="target.sponsorshipProgress"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="text-lg">✅</div>
+              <span class="text-sm font-medium text-gray-700">Tasks</span>
+            </div>
+            <span class="text-sm font-bold text-blue-600">
+              {{ target.tasksProgress }}%
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between text-xs text-gray-600">
+            <span class="font-bold text-gray-900">
+              {{ target.tasksCompleted }}
+            </span>
+            <span>/ {{ target.tasksTarget }}</span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"
+              [style.width.%]="target.tasksProgress"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Voters -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="text-lg">👥</div>
+              <span class="text-sm font-medium text-gray-700">Voters</span>
+            </div>
+            <span class="text-sm font-bold text-purple-600">
+              {{ target.votersProgress }}%
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between text-xs text-gray-600">
+            <span class="font-bold text-gray-900">
+              {{ target.votersContacted }}
+            </span>
+            <span>/ {{ target.votersTarget }}</span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full"
+              [style.width.%]="target.votersProgress"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

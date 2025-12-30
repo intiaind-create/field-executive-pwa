@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/services/auth.service';
 import { ConvexService } from '../../core/services/convex.service';
 import { api } from '@convex/_generated/api';
+import { TargetsWidgetComponent } from './targets-widget/targets-widget.component';
 
 interface TaskStats {
   pending: number;
@@ -21,7 +22,7 @@ interface AttendanceSummary {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,TargetsWidgetComponent],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit, OnDestroy {

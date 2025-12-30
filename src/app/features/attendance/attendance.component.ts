@@ -1,144 +1,231 @@
-import { Component, computed, signal, inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { api } from '@convex/_generated/api';
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ConvexService } from '../../core/services/convex.service';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { Observable } from 'rxjs';
-
-// ✅ Interfaces
-export interface AttendanceRecord {
-  _id: string;
-  checkInTime?: number;
-  checkOutTime?: number;
-  date: string;
-  status?: string;
-}
-
-export interface AttendanceSummary {
-  presentDays: number;
-  totalHours: number;
-}
+import { api } from '@convex/_generated/api';
 
 @Component({
   selector: 'app-attendance',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './attendance.component.html'
+  templateUrl: './attendance.component.html',
+  styleUrls: ['./attendance.component.scss']
 })
-export class AttendanceComponent {
-  private convex = inject(ConvexService);
-  private platformId = inject(PLATFORM_ID);
-
-  activeTab = signal<'today' | 'history' | 'summary'>('today');
-  currentTime = signal(new Date());
+export class AttendanceComponent implements OnInit {
+  // ✅ Expose Date for template
+  Date = Date;
+  
+  // ✅ Changed from private to public for template access
+  rawAttendance = signal<any>(null);
+  
   isProcessing = signal(false);
+  error = signal<string | null>(null);
+  successMessage = signal<string | null>(null);
+  currentLocation = signal<{ latitude: number; longitude: number; address: string } | null>(null);
 
-  // ✅ Raw attendance from backend
-  todayAttendance = toSignal<AttendanceRecord | null>(
-    this.convex.watch(api.attendance.queries.getTodayAttendance),
-    { initialValue: null }
-  );
-
-  // 🔥 NEW - Validate it's actually today's record
+  // ✅ CRITICAL FIX: Validate attendance date matches TODAY
   todayAttendanceValidated = computed(() => {
-    const attendance = this.todayAttendance();
+    const attendance = this.rawAttendance();
     if (!attendance) return null;
-    
+
+    // Get today's date string (YYYY-MM-DD)
     const today = new Date().toISOString().split('T')[0];
-    if (attendance.date !== today) return null; // ❌ Old record, ignore it
     
-    return attendance; // ✅ Valid today's record
+    // Get attendance date string
+    const attendanceDate = attendance.date;
+    
+    console.log('📅 Date Check:', { 
+      today, 
+      attendanceDate, 
+      matches: attendanceDate === today 
+    });
+
+    // ✅ ONLY return attendance if date matches today
+    if (attendanceDate !== today) {
+      console.log('⚠️ Attendance date does not match today - treating as not checked in');
+      return null;
+    }
+
+    return attendance;
   });
 
-  history = toSignal(
-    this.convex.watch(api.attendance.queries.getHistory) as Observable<AttendanceRecord[]>,
-    { initialValue: [] as AttendanceRecord[] }
-  );
+  // Computed properties based on validated attendance
+  isCheckedIn = computed(() => {
+    const attendance = this.todayAttendanceValidated();
+    return !!attendance?.checkInTime;
+  });
 
-  summary = toSignal<AttendanceSummary | null>(
-    this.convex.watch(api.attendance.queries.getStats),
-    { initialValue: null }
-  );
+  isCheckedOut = computed(() => {
+    const attendance = this.todayAttendanceValidated();
+    return !!attendance?.checkOutTime;
+  });
 
   workingHours = computed(() => {
-    const data = this.todayAttendanceValidated(); // 🔥 Use validated
-    if (!data?.checkInTime) return '0.0';
-    
-    if (data.checkOutTime) {
-      const diff = data.checkOutTime - data.checkInTime;
-      return (diff / (1000 * 60 * 60)).toFixed(1);
-    }
-    
-    const diff = this.currentTime().getTime() - data.checkInTime;
-    return (diff / (1000 * 60 * 60)).toFixed(1);
+    const attendance = this.todayAttendanceValidated();
+    if (!attendance?.checkInTime) return 0;
+
+    const endTime = attendance.checkOutTime || Date.now();
+    const hours = (endTime - attendance.checkInTime) / (1000 * 60 * 60);
+    return Math.max(0, Math.min(hours, 24)); // Cap at 24 hours
   });
 
-  constructor() {
-    if (isPlatformBrowser(this.platformId)) {
-      setInterval(() => this.currentTime.set(new Date()), 1000);
-    }
+  constructor(
+    private convex: ConvexService,
+    private router: Router
+  ) {}
+
+  async ngOnInit() {
+    await this.loadTodayAttendance();
+    this.getCurrentLocation();
   }
 
-  async handleCheckIn() {
-    if (this.isProcessing()) return;
-    this.isProcessing.set(true);
-    
+  async loadTodayAttendance() {
     try {
-      const position = await this.getCurrentLocation();
-      await this.convex.mutation(api.attendance.mutation.checkIn, {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        address: "Current Location"
-      });
-    } catch (error) {
-      console.error("Check-in failed", error);
-      alert("Could not check in. Please ensure GPS is enabled.");
-    } finally {
-      this.isProcessing.set(false);
+      console.log('🔄 Loading today\'s attendance...');
+      
+      const data = await this.convex.client.query(
+        api.attendance.queries.getTodayAttendance,
+        {}
+      );
+
+      console.log('📊 Backend returned:', data);
+      
+      // Store raw data
+      this.rawAttendance.set(data);
+
+      // Log validation result
+      const validated = this.todayAttendanceValidated();
+      console.log('✅ Validated attendance:', validated);
+      console.log('✅ Is Checked In:', this.isCheckedIn());
+
+    } catch (err: any) {
+      console.error('❌ Failed to load attendance:', err);
+      this.error.set(err?.message || 'Failed to load attendance');
     }
   }
 
-  async handleCheckOut() {
-    if (this.isProcessing()) return;
-    this.isProcessing.set(true);
-    
-    try {
-      const position = await this.getCurrentLocation();
-      await this.convex.mutation(api.attendance.mutation.checkOut, {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        address: "Current Location"
-      });
-    } catch (error) {
-      console.error("Check-out failed", error);
-      alert("Could not check out. Please ensure GPS is enabled.");
-    } finally {
-      this.isProcessing.set(false);
+  getCurrentLocation() {
+    if (!navigator.geolocation) {
+      console.warn('Geolocation not supported');
+      return;
     }
-  }
 
-  getCurrentLocation(): Promise<GeolocationPosition> {
-    return new Promise((resolve, reject) => {
-      if (!isPlatformBrowser(this.platformId) || !navigator.geolocation) {
-        reject(new Error("Geolocation not supported"));
-        return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.currentLocation.set({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          address: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`
+        });
+      },
+      (error) => {
+        console.error('Location error:', error);
       }
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      });
+    );
+  }
+
+  async checkIn() {
+    if (this.isProcessing()) return;
+    if (this.isCheckedIn()) {
+      this.error.set('Already checked in today');
+      return;
+    }
+
+    const location = this.currentLocation();
+    if (!location) {
+      this.error.set('Location required for check-in');
+      return;
+    }
+
+    try {
+      this.isProcessing.set(true);
+      this.error.set(null);
+
+      console.log('📍 Checking in with location:', location);
+
+      await this.convex.client.mutation(
+        api.attendance.mutations.checkIn,
+        { location }
+      );
+
+      this.successMessage.set('✅ Checked in successfully!');
+      
+      // Reload attendance data
+      await this.loadTodayAttendance();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => this.successMessage.set(null), 3000);
+
+    } catch (err: any) {
+      console.error('❌ Check-in failed:', err);
+      this.error.set(err?.message || 'Check-in failed');
+    } finally {
+      this.isProcessing.set(false);
+    }
+  }
+
+  async checkOut() {
+    if (this.isProcessing()) return;
+    if (!this.isCheckedIn()) {
+      this.error.set('Must check in first');
+      return;
+    }
+    if (this.isCheckedOut()) {
+      this.error.set('Already checked out today');
+      return;
+    }
+
+    const location = this.currentLocation();
+    if (!location) {
+      this.error.set('Location required for check-out');
+      return;
+    }
+
+    try {
+      this.isProcessing.set(true);
+      this.error.set(null);
+
+      console.log('🚪 Checking out with location:', location);
+
+      await this.convex.client.mutation(
+        api.attendance.mutations.checkOut,
+        { location }
+      );
+
+      this.successMessage.set('✅ Checked out successfully!');
+      
+      // Reload attendance data
+      await this.loadTodayAttendance();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => this.successMessage.set(null), 3000);
+
+    } catch (err: any) {
+      console.error('❌ Check-out failed:', err);
+      this.error.set(err?.message || 'Check-out failed');
+    } finally {
+      this.isProcessing.set(false);
+    }
+  }
+
+  goBack() {
+    this.router.navigate(['/dashboard']);
+  }
+
+  formatTime(timestamp: number | undefined): string {
+    if (!timestamp) return 'N/A';
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 
-  getStatusColor(status: string | undefined): string {
-    if (!status) return 'bg-gray-100 text-gray-800';
-    const colors: Record<string, string> = {
-      present: 'bg-green-100 text-green-800',
-      absent: 'bg-red-100 text-red-800',
-      half_day: 'bg-yellow-100 text-yellow-800',
-      leave: 'bg-blue-100 text-blue-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+  formatDate(timestamp: number): string {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 }

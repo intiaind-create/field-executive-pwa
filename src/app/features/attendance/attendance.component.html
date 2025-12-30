@@ -1,135 +1,231 @@
-<div class="p-4 bg-gray-50 min-h-screen">
+<!-- attendance.component.html -->
 
-  <div class="flex space-x-1 mb-4 bg-gray-200 rounded-lg p-1">
-    <button (click)="activeTab.set('today')"
-      class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-      [ngClass]="activeTab() === 'today' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'">
-      Today
-    </button>
-    <button (click)="activeTab.set('history')"
-      class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-      [ngClass]="activeTab() === 'history' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'">
-      History
-    </button>
-    <button (click)="activeTab.set('summary')"
-      class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-      [ngClass]="activeTab() === 'summary' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'">
-      Summary
-    </button>
-  </div>
-
-  <div *ngIf="activeTab() === 'today'" class="space-y-6">
-    
-    <div class="bg-white rounded-lg p-6 shadow-sm text-center">
-      <div class="text-3xl font-bold text-gray-900 mb-1">
-        {{ currentTime() | date:'shortTime' }}
-      </div>
-      <div class="text-sm text-gray-600">
-        {{ currentTime() | date:'fullDate' }}
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-      <button (click)="handleCheckIn()"
-        [disabled]="todayAttendanceValidated()?.checkInTime || isProcessing()"
-        class="py-4 rounded-lg font-medium text-white transition disabled:opacity-50"
-        [ngClass]="(!todayAttendanceValidated()?.checkInTime && !isProcessing()) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'">
-        {{ isProcessing() ? 'Processing...' : 'Check In' }}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pb-24">
+  <!-- Header -->
+  <div class="sticky top-0 z-10 bg-white shadow-md">
+    <div class="px-4 py-4 flex items-center justify-between">
+      <button
+        (click)="goBack()"
+        class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
       </button>
-      
-      <button (click)="handleCheckOut()"
-        [disabled]="!todayAttendanceValidated()?.checkInTime || todayAttendanceValidated()?.checkOutTime || isProcessing()"
-        class="py-4 rounded-lg font-medium text-white transition disabled:opacity-50"
-        [ngClass]="(todayAttendanceValidated()?.checkInTime && !todayAttendanceValidated()?.checkOutTime && !isProcessing()) ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400'">
-        {{ isProcessing() ? 'Processing...' : 'Check Out' }}
-      </button>
-    </div>
-
-    <div class="bg-white rounded-lg p-4 shadow-sm">
-      <h3 class="font-semibold text-gray-900 mb-3">Today's Status</h3>
-      
-      <div *ngIf="!todayAttendanceValidated()" class="text-center py-4 text-gray-500">
-        <div class="text-2xl mb-2">⏰</div>
-        <p>Not checked in yet</p>
-      </div>
-
-      <div *ngIf="todayAttendanceValidated() as attendance" class="space-y-3">
-        <div class="flex justify-between">
-          <span class="text-gray-600">Status:</span>
-          <span class="font-medium text-green-600">
-            {{ attendance.checkOutTime ? "Checked Out" : "Checked In" }}
-          </span>
-        </div>
-
-        <div class="flex justify-between" *ngIf="attendance.checkInTime">
-          <span class="text-gray-600">Check In:</span>
-          <span class="font-medium">
-            {{ attendance.checkInTime | date:'shortTime' }}
-          </span>
-        </div>
-
-        <div *ngIf="attendance.checkOutTime" class="flex justify-between">
-          <span class="text-gray-600">Check Out:</span>
-          <span class="font-medium">
-            {{ attendance.checkOutTime | date:'shortTime' }}
-          </span>
-        </div>
-
-        <div class="flex justify-between">
-          <span class="text-gray-600">Working Hours:</span>
-          <span class="font-medium">{{ workingHours() }} hrs</span>
-        </div>
-      </div>
+      <h1 class="text-xl font-bold text-gray-900">Attendance</h1>
+      <div class="w-10"></div>
     </div>
   </div>
 
-  <div *ngIf="activeTab() === 'history'" class="space-y-3">
-    <div *ngFor="let record of history()" class="bg-white rounded-lg p-4 shadow-sm">
-      <div class="flex justify-between items-start mb-2">
-        <div class="font-medium text-gray-900">
-          {{ record.date | date:'fullDate' }}
+  <!-- Content -->
+  <div class="p-4 space-y-6">
+    <!-- Success Message -->
+    <div
+      *ngIf="successMessage()"
+      class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center space-x-3"
+    >
+      <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <p class="text-green-800 font-medium">{{ successMessage() }}</p>
+    </div>
+
+    <!-- Error Message -->
+    <div
+      *ngIf="error()"
+      class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center space-x-3"
+    >
+      <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <p class="text-red-800 font-medium">{{ error() }}</p>
+    </div>
+
+    <!-- Current Date -->
+    <div class="bg-white rounded-2xl p-6 shadow-lg">
+      <div class="text-center">
+        <div class="text-3xl font-black text-gray-900 mb-2">
+          {{ Date.now() | date:'EEEE' }}
         </div>
-        <span class="px-2 py-1 rounded-full text-xs font-medium" 
-              [ngClass]="getStatusColor(record.status)">
-          {{ record.status | uppercase }}
+        <div class="text-lg text-gray-600">
+          {{ Date.now() | date:'MMMM d, yyyy' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="bg-white rounded-2xl p-6 shadow-lg">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">Today's Status</h3>
+      
+      <div class="space-y-4">
+        <!-- Status Badge -->
+        <div class="flex items-center justify-between p-4 rounded-xl"
+             [ngClass]="isCheckedIn() ? 'bg-green-50' : 'bg-gray-50'">
+          <span class="font-medium text-gray-700">Status:</span>
+          <span class="px-4 py-2 rounded-full font-bold text-sm"
+                [ngClass]="isCheckedIn() ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'">
+            {{ isCheckedIn() ? '✅ Checked In' : '⏳ Not Checked In' }}
+          </span>
+        </div>
+
+        <!-- Check In Time -->
+        <div *ngIf="isCheckedIn()" class="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+          <div>
+            <div class="text-xs text-gray-600 mb-1">Check In Time</div>
+            <div class="text-lg font-bold text-gray-900">
+              {{ formatTime(todayAttendanceValidated()?.checkInTime) }}
+            </div>
+          </div>
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+            />
+          </svg>
+        </div>
+
+        <!-- Check Out Time -->
+        <div *ngIf="isCheckedOut()" class="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
+          <div>
+            <div class="text-xs text-gray-600 mb-1">Check Out Time</div>
+            <div class="text-lg font-bold text-gray-900">
+              {{ formatTime(todayAttendanceValidated()?.checkOutTime) }}
+            </div>
+          </div>
+          <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+        </div>
+
+        <!-- Working Hours -->
+        <div *ngIf="isCheckedIn()" class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-gray-700">Hours Worked:</span>
+            <span class="text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              {{ workingHours() | number:'1.1-1' }}h
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="space-y-4">
+      <!-- Check In Button -->
+      <button
+        (click)="checkIn()"
+        [disabled]="isCheckedIn() || isProcessing()"
+        class="w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-200"
+        [ngClass]="{
+          'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white transform hover:-translate-y-1': !isCheckedIn() && !isProcessing(),
+          'bg-gray-300 text-gray-500 cursor-not-allowed': isCheckedIn() || isProcessing()
+        }"
+      >
+        <span *ngIf="!isProcessing()">
+          {{ isCheckedIn() ? '✓ Already Checked In' : '📍 Check In' }}
         </span>
-      </div>
-      
-      <div class="grid grid-cols-2 gap-4 text-sm" *ngIf="record.checkInTime">
-        <div>
-          <span class="text-gray-500">In:</span>
-          <div class="font-medium">{{ record.checkInTime | date:'shortTime' }}</div>
-        </div>
-        <div *ngIf="record.checkOutTime">
-          <span class="text-gray-500">Out:</span>
-          <div class="font-medium">{{ record.checkOutTime | date:'shortTime' }}</div>
+        <span *ngIf="isProcessing()">
+          <svg class="inline w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          Processing...
+        </span>
+      </button>
+
+      <!-- Check Out Button -->
+      <button
+        (click)="checkOut()"
+        [disabled]="!isCheckedIn() || isCheckedOut() || isProcessing()"
+        class="w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-200"
+        [ngClass]="{
+          'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white transform hover:-translate-y-1': isCheckedIn() && !isCheckedOut() && !isProcessing(),
+          'bg-gray-300 text-gray-500 cursor-not-allowed': !isCheckedIn() || isCheckedOut() || isProcessing()
+        }"
+      >
+        <span *ngIf="!isProcessing()">
+          {{ isCheckedOut() ? '✓ Already Checked Out' : '🚪 Check Out' }}
+        </span>
+        <span *ngIf="isProcessing()">
+          <svg class="inline w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          Processing...
+        </span>
+      </button>
+    </div>
+
+    <!-- Location Status -->
+    <div class="bg-white rounded-2xl p-4 shadow-lg">
+      <div class="flex items-center space-x-3">
+        <svg
+          class="w-5 h-5"
+          [ngClass]="currentLocation() ? 'text-green-600' : 'text-gray-400'"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        <div class="flex-1">
+          <div class="text-xs text-gray-600">Location</div>
+          <div class="text-sm font-medium text-gray-900">
+            {{ currentLocation() ? 'Detected' : 'Detecting...' }}
+          </div>
         </div>
       </div>
     </div>
-    
-    <div *ngIf="history().length === 0" class="text-center py-8 text-gray-500">
-      <p>No records found.</p>
+
+    <!-- Debug Info (Remove in production) -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-xs">
+      <div class="font-bold mb-2">Debug Info:</div>
+      <div>Raw Attendance: {{ rawAttendance() ? 'Loaded' : 'None' }}</div>
+      <div>Attendance Date: {{ todayAttendanceValidated()?.date || 'N/A' }}</div>
+      <div>Today: {{ Date.now() | date:'yyyy-MM-dd' }}</div>
+      <div>Is Checked In: {{ isCheckedIn() }}</div>
+      <div>Is Checked Out: {{ isCheckedOut() }}</div>
     </div>
   </div>
-
-  <div *ngIf="activeTab() === 'summary'" class="space-y-4">
-    <div *ngIf="summary() as stats" class="bg-white rounded-lg p-4 shadow-sm">
-      <h3 class="font-semibold text-gray-900 mb-4">This Month</h3>
-      <div class="grid grid-cols-2 gap-4 text-center">
-        <div>
-          <div class="text-2xl font-bold text-green-600">{{ stats.presentDays }}</div>
-          <div class="text-sm text-gray-600">Present</div>
-        </div>
-        <div>
-          <div class="text-2xl font-bold text-blue-600">{{ stats.totalHours | number:'1.0-1' }}</div>
-          <div class="text-sm text-gray-600">Hours</div>
-        </div>
-      </div>
-    </div>
-    
-    <div *ngIf="!summary()" class="text-center py-8 text-gray-500">
-      <p>Loading summary...</p>
-    </div>
-  </div>
-
 </div>

@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { ConvexService } from '../../services/convex.service';
@@ -7,19 +7,21 @@ import { OfflineStorageService } from '../../services/offline-storage.service';
 import { api } from '@convex/_generated/api';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+
 const ROUTE_MAP: Record<string, string[]> = {
   'dashboard': ['/dashboard', '/'],
   'tasks': ['/tasks'],
   'attendance': ['/attendance'],
   'training': ['/training'],
+  'targets': ['/targets'],  // ← NEW
   'settings': ['/settings', '/store', '/profile']
 };
+
 @Component({
   selector: 'app-bottom-nav',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './bottom-nav.component.html',
-  
 })
 export class BottomNavComponent implements OnInit, OnDestroy {
   private router = inject(Router);

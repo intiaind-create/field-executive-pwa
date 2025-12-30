@@ -60,15 +60,14 @@ export const routes: Routes = [
         path: 'dashboard',
         component: DashboardComponent,
       },
-          {
-        path: 'tasks/:id', // ✅ Add this
+      {
+        path: 'tasks/:id',
         component: TaskDetailComponent,
       },
       {
         path: 'tasks',
         component: TasksComponent,
       },
-  
       {
         path: 'attendance',
         component: AttendanceComponent,
@@ -94,7 +93,7 @@ export const routes: Routes = [
         component: CertificatesComponent,
       },
 
-      // ✅ Quiz Routes (specific routes FIRST)
+      // Quiz Routes (specific routes FIRST)
       {
         path: 'training/quiz',
         component: QuizListComponent,
@@ -108,14 +107,14 @@ export const routes: Routes = [
         component: QuizTakeComponent,
       },
 
-      // ✅ Progress Routes
+      // Progress Routes
       {
         path: 'training/progress',
         component: ProgressComponent,
       },
       {
         path: 'training/progress/:courseId',
-        component: ProgressComponent, // ✅ Can reuse same component with route params
+        component: ProgressComponent,
       },
 
       // Course Routes (dynamic routes LAST)
@@ -126,6 +125,17 @@ export const routes: Routes = [
       {
         path: 'training/:courseId/module/:moduleId',
         component: ModuleLearningComponent,
+      },
+
+      // ========================================================================
+      // TARGET MODULE (NEW)
+      // ========================================================================
+      {
+        path: 'targets',
+        loadComponent: () =>
+          import('./features/targets/targets.component').then(
+            (m) => m.TargetsComponent
+          ),
       },
 
       // ========================================================================

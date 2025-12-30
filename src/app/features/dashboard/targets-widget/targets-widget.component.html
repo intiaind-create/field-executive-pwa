@@ -1,0 +1,177 @@
+<!-- targets-widget.component.html -->
+
+<div class="targets-widget">
+  <!-- Header -->
+  <div class="widget-header">
+    <h3 class="widget-title">
+      <i class="pi pi-chart-line"></i>
+      My Targets
+    </h3>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Loading targets...</span>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="error-state">
+      <i class="pi pi-exclamation-circle"></i>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  @if (dashboard() && !isLoading() && !error()) {
+    <div class="targets-content">
+      <!-- Overall Progress Cards -->
+      <div class="progress-grid">
+        <!-- Sponsorship -->
+        <div class="progress-card">
+          <div class="progress-header">
+            <i class="pi pi-money-bill icon-sponsorship"></i>
+            <span class="progress-label">Sponsorship</span>
+          </div>
+          <div class="progress-value">
+            <span class="achieved">{{ formatCurrency(dashboard()!.totalSponsorshipAchieved) }}</span>
+            <span class="target">/ {{ formatCurrency(dashboard()!.totalSponsorshipTarget) }}</span>
+          </div>
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="dashboard()!.overallSponsorshipProgress"
+              [style.backgroundColor]="getProgressColor(dashboard()!.overallSponsorshipProgress)"
+            ></div>
+          </div>
+          <div class="progress-percentage">{{ dashboard()!.overallSponsorshipProgress }}%</div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="progress-card">
+          <div class="progress-header">
+            <i class="pi pi-check-square icon-tasks"></i>
+            <span class="progress-label">Tasks</span>
+          </div>
+          <div class="progress-value">
+            <span class="achieved">{{ dashboard()!.totalTasksCompleted }}</span>
+            <span class="target">/ {{ dashboard()!.totalTasksTarget }}</span>
+          </div>
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="dashboard()!.overallTasksProgress"
+              [style.backgroundColor]="getProgressColor(dashboard()!.overallTasksProgress)"
+            ></div>
+          </div>
+          <div class="progress-percentage">{{ dashboard()!.overallTasksProgress }}%</div>
+        </div>
+
+        <!-- Voters -->
+        <div class="progress-card">
+          <div class="progress-header">
+            <i class="pi pi-users icon-voters"></i>
+            <span class="progress-label">Voters</span>
+          </div>
+          <div class="progress-value">
+            <span class="achieved">{{ dashboard()!.totalVotersContacted }}</span>
+            <span class="target">/ {{ dashboard()!.totalVotersTarget }}</span>
+          </div>
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="dashboard()!.overallVotersProgress"
+              [style.backgroundColor]="getProgressColor(dashboard()!.overallVotersProgress)"
+            ></div>
+          </div>
+          <div class="progress-percentage">{{ dashboard()!.overallVotersProgress }}%</div>
+        </div>
+      </div>
+
+      <!-- Active Targets By Period -->
+      <div class="periods-section">
+        <h4 class="section-title">Active Targets</h4>
+        
+        @if (dashboard()!.monthly; as monthly) {
+          <div class="period-item">
+            <div class="period-header">
+              <span class="period-badge monthly">Monthly</span>
+              <span class="days-remaining">{{ monthly.daysRemaining }} days left</span>
+            </div>
+            <div class="mini-progress-grid">
+              <div class="mini-progress">
+                <span class="mini-label">💰 Sponsorship</span>
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width.%]="monthly.sponsorshipProgress"></div>
+                </div>
+                <span class="mini-percent">{{ monthly.sponsorshipProgress }}%</span>
+              </div>
+              <div class="mini-progress">
+                <span class="mini-label">✅ Tasks</span>
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width.%]="monthly.tasksProgress"></div>
+                </div>
+                <span class="mini-percent">{{ monthly.tasksProgress }}%</span>
+              </div>
+              <div class="mini-progress">
+                <span class="mini-label">👥 Voters</span>
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width.%]="monthly.votersProgress"></div>
+                </div>
+                <span class="mini-percent">{{ monthly.votersProgress }}%</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (dashboard()!.weekly; as weekly) {
+          <div class="period-item">
+            <div class="period-header">
+              <span class="period-badge weekly">Weekly</span>
+              <span class="days-remaining">{{ weekly.daysRemaining }} days left</span>
+            </div>
+            <div class="mini-progress-grid">
+              <div class="mini-progress">
+                <span class="mini-label">💰</span>
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width.%]="weekly.sponsorshipProgress"></div>
+                </div>
+                <span class="mini-percent">{{ weekly.sponsorshipProgress }}%</span>
+              </div>
+              <div class="mini-progress">
+                <span class="mini-label">✅</span>
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width.%]="weekly.tasksProgress"></div>
+                </div>
+                <span class="mini-percent">{{ weekly.tasksProgress }}%</span>
+              </div>
+              <div class="mini-progress">
+                <span class="mini-label">👥</span>
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width.%]="weekly.votersProgress"></div>
+                </div>
+                <span class="mini-percent">{{ weekly.votersProgress }}%</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (!dashboard()!.monthly && !dashboard()!.weekly && !dashboard()!.daily && !dashboard()!.quarterly) {
+          <div class="no-targets">
+            <i class="pi pi-info-circle"></i>
+            <p>No active targets assigned</p>
+          </div>
+        }
+      </div>
+
+      <!-- View Details Button -->
+      <button class="view-details-btn" (click)="viewDetails()">
+        View Full Details
+        <i class="pi pi-arrow-right"></i>
+      </button>
+    </div>
+  }
+</div>
