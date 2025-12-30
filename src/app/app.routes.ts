@@ -60,14 +60,15 @@ export const routes: Routes = [
         path: 'dashboard',
         component: DashboardComponent,
       },
+          {
+        path: 'tasks/:id', // ✅ Add this
+        component: TaskDetailComponent,
+      },
       {
         path: 'tasks',
         component: TasksComponent,
       },
-      {
-        path: 'tasks/:id', // ✅ Add this
-        component: TaskDetailComponent,
-      },
+  
       {
         path: 'attendance',
         component: AttendanceComponent,
